@@ -1,0 +1,76 @@
+//This script let you teleport to a specific region and to specific coordinates inside a grid. Add this script to an object and use it as a HUD. 
+//Made by Magnus Morgenstern Sacrarium Grid.
+
+string Destination = ""; 
+vector LandingPoint = <0,0,0>; 
+vector LookAt = <1,1,1>;  
+integer  gListener;
+key owner;
+default
+{
+    state_entry(){
+    state destination;
+}
+}
+
+state destination
+{
+        touch_start(integer total_number)
+    {
+        integer channel = -13572468;
+        gListener = llListen( channel, "", "", "");     
+        llTextBox(llDetectedKey(0), "Input region name or just 'here' if you need current region. ", channel);
+    owner=llDetectedKey(0);
+    }
+    listen(integer channel, string name, key id, string message)
+    {
+        llListenRemove(gListener);
+    if (message=="here") {
+        Destination=llGetRegionName();
+        state landpoint;
+    }
+ else{
+        Destination = message;
+        state landpoint;
+    }
+    }
+}
+
+state landpoint
+{
+      state_entry()
+     
+    {
+        integer channel = -13572468;
+        gListener = llListen( channel, "", "", "");     
+        llTextBox(owner, "Input coordinates as x,y,z", channel);
+    }
+    listen(integer channel, string name, key id, string message)
+    {
+        llListenRemove(gListener);
+        LandingPoint = message;
+        state teleport;
+    }
+}
+
+state teleport
+{
+  on_rez(integer start_param)
+  {
+    llResetScript();
+  }
+  changed(integer change) 
+  {
+    if(change & CHANGED_OWNER)
+      llResetScript();
+    else if (change & 256) 
+      llResetScript();
+  }
+  state_entry()
+   {
+    key avatar = llDetectedKey(0);
+    llInstantMessage(owner, "Teleporting you to : "+Destination);
+    osTeleportAgent(owner, Destination, LandingPoint, LookAt); 
+state default;
+  }
+}
